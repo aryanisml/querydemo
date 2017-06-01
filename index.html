@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Query Builder Application</title>
+<style>
+  #mainDiv{
+    margin:30px;
+  }
+  .alpha{
+    display:inline !important;
+    
+    
+  }
+  .beta{
+    border-color:#F99 !important;
+    background-color: #FDD !important;
+  }
+ 
+</style>
+<link rel="stylesheet" type="text/css" href="./dist/css/query-builder.default.css">
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" id="bt-theme">
+
+  <link rel="stylesheet" href="node_modules/bootstrap-select/dist/css/bootstrap-select.min.css">
+  <link rel="stylesheet" href="node_modules/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css">
+  <link rel="stylesheet" href="node_modules/bootstrap-slider/dist/css/bootstrap-slider.min.css">
+  <link rel="stylesheet" href="node_modules/selectize/dist/css/selectize.bootstrap3.css">
+
+<script src="node_modules/jquery/dist/jquery.min.js"> </script>
+<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"> </script>
+<script src="node_modules/jquery-extendext/jQuery.extendext.min.js"> </script>
+<script src="node_modules/dot/doT.min.js"> </script>
+<script src="node_modules/moment/min/moment.min.js"> </script>
+<script src="node_modules/interactjs/dist/interact.min.js"> </script>
+
+<script src="dist/js/query-builder.min.js"> </script>
+<script src="node_modules/angular/angular.min.js"></script>
+
+</head>
+<body>
+
+<div id="mainDiv" ng-app="myapp" ng-controller="myctr">
+  <br/><br/>
+ <select id="selCri" ng-model="selectedCri">
+   <option value="ta">Therapeutic Area</option>
+   <option value="indication">Indication</option>
+   <option value="phase">Phase</option>
+   <option value="ta2">Therapeutic Area 2</option>   
+ </select> 
+ <button ng-click="addCriteria()">Add criteria </button>
+
+  <br/><br/><br/>
+
+  <cmp1></cmp1>
+</div>
+
+
+<script>
+  var app = angular.module('myapp',[]);
+  app.controller('myctr',function($scope){
+     $scope.addCriteria = function(){
+	   //alert("selected criteria =" + $scope.selectedCri) ;
+
+     $scope.$broadcast('addCriteria',{filterId:$scope.selectedCri});
+	}
+  });
+
+</script>
+<script src="cmpctr.js"></script>
+<script src="cmp1.js"></script>
+</body>
+</html>
