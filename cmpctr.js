@@ -248,24 +248,37 @@ angular.module('myapp')
             var $container = rule.$el.find('.rule-value-container');
             var $target = $container.find('select');
             var results = "";
-            $target.on('click', function ($event) {
-                var index = -1;
+            $target.on('change', function ($event) {
+                //var index = -1;
                 var allRules = angular.element('#builder').queryBuilder('getRules');
                 var i = 0;
-                groupLinearRules(rule.model.root.rules, r.id);
+				var index = -1;
+                groupLinearRules(rule.model.root.rules, r.id,index);
 
             });
-            var index = -1;
-            function groupLinearRules(array, ruleId) {
+              function groupLinearRules(array, ruleId,index) {
+			
                 angular.forEach(array, function (v, k) {  
-                    
+                    console.log("key" + k);
                     if (v.id.indexOf('group') > -1) {
+						if (v.rules !== undefined) {
+                        index=k;
+						 console.log("Group key" + k);
+                        groupLinearRules(v.rules, ruleId,index);
                     }
-                    else {   
+      
+                    }
+                    else { 		
                         if (v.data.ruleId === ruleId) {
-                            index = k;
+							 console.log("normal " + k);
+							 console.log(v.data.ruleId);
+							 console.log(ruleId);
+                        index = k;   
                         }
                         if (index !== -1 && k >= index) {
+							console.log("key color " + k);
+							console.log("index color " + index);
+							console.log("element color " + v.data.ruleId);
                             var ruleElementId = '#' + v.data.ruleId;
                             if (rule.data.reload === true) {
                                 var ruleElement = angular.element(document.querySelector(ruleElementId));
@@ -276,15 +289,12 @@ angular.module('myapp')
                             }
                         }
                     }
-                    if (v.rules !== undefined) {
-                        console.log('start...');
-                        groupLinearRules(v.rules, ruleId);
-                    }
                     
                 });
+			
             }
             $target.bind('change', function ($event) {
-                alert('event has fired');
+            //    alert('event has fired');
             });
         });
 
