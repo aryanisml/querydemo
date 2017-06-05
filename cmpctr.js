@@ -243,7 +243,6 @@ angular.module('myapp')
 
         angular.element('#builder').on('afterCreateRuleInput.queryBuilder', function (e, rule) {
             //console.log('only  first rule element is changed');
-
             var r = rule;
             var $container = rule.$el.find('.rule-value-container');
             var $target = $container.find('select');
@@ -252,35 +251,43 @@ angular.module('myapp')
                 //var index = -1;
                 var allRules = angular.element('#builder').queryBuilder('getRules');
                 var i = 0;
-				var index = -1;
-                groupLinearRules(rule.model.root.rules, r.id,index);
+                var index = -1;
+                groupLinearRules(rule.model.root.rules, r.id, index);
 
             });
-              function groupLinearRules(array, ruleId,index) {
-			
-                angular.forEach(array, function (v, k) {  
-                    console.log("key" + k);
-                    if (v.id.indexOf('group') > -1) {
-						if (v.rules !== undefined) {
-                        index=k;
-						 console.log("Group key" + k);
-                        groupLinearRules(v.rules, ruleId,index);
-                    }
-      
-                    }
-                    else { 		
-                        if (v.data.ruleId === ruleId) {
-							 console.log("normal " + k);
-							 console.log(v.data.ruleId);
-							 console.log(ruleId);
-                        index = k;   
+
+            $target.bind('click', function ($event) {
+                rule.data.reload = false;
+                var ruleElementId = '#' + rule.data.ruleId;
+                var ruleElement = angular.element(document.querySelector(ruleElementId));
+                ruleElement.removeClass('beta');
+                var errorElement = ruleElement.find('.error-container');
+                errorElement.removeClass('alpha');
+
+            });
+        });
+        function groupLinearRules(array, ruleId, index) {
+            var d=false;
+            angular.forEach(array, function (v, k) {
+                if (v.id.indexOf('group') > -1) {
+                    if (v.rules !== undefined) {
+                        index = k;
+                        if(!d){
+                         groupLinearRules(v.rules, ruleId, index);
                         }
-                        if (index !== -1 && k >= index) {
-							console.log("key color " + k);
-							console.log("index color " + index);
-							console.log("element color " + v.data.ruleId);
+                    }
+                }
+                else {
+                    if (v.data !== undefined) {
+                        if (v.data.ruleId === ruleId) {
+                            console.log(v);
+                            index = k;
+                            d=true;
+                        }
+                        if (index !== -1 && k > index) {
                             var ruleElementId = '#' + v.data.ruleId;
-                            if (rule.data.reload === true) {
+                            v.data.reload = true;
+                            if (v.data.reload === true) {
                                 var ruleElement = angular.element(document.querySelector(ruleElementId));
                                 ruleElement.addClass('beta');
                                 var errorElement = ruleElement.find('.error-container');
@@ -289,14 +296,27 @@ angular.module('myapp')
                             }
                         }
                     }
-                    
-                });
-			
-            }
-            $target.bind('change', function ($event) {
-            //    alert('event has fired');
+                }
+             //   console.log("key " + k);
+              //  console.log("index " + index);
+               
             });
+
+        }
+
+        angular.element("#builder").on('afterMove.queryBuilder', function (e, rule) {
+            var index = -1;
+            // alert(rule.id);
+            groupLinearRules(rule.model.root.rules, rule.id, index);
         });
+         
+       angular.element("#builder").on('beforeDeleteRule.queryBuilder',function(e,rule){
+            var index = -1;
+            groupLinearRules(rule.model.root.rules, rule.id, index);
+                 
+       });
+
+
 
         angular.element('#builder').on('afterUpdateRuleValue.queryBuilder', function (e, rule) {
 
@@ -305,21 +325,6 @@ angular.module('myapp')
 
             var $container = rule.$el.find('.rule-value-container');
             var $target = $container.find('select');
-            //    $target.on('click',function($event){
-            //var ruleElementId= '#' + r.id;
-            /*
-            if(rule.data.reload===true){
-                 var ruleElement= angular.element(document.querySelector(ruleElementId));
-                 ruleElement.addClass('beta');
-                 var errorElement= ruleElement.find('.error-container');
-                 errorElement.addClass('alpha');
-                 errorElement.attr('title','Reload Once again....');
-              }
-              */
-            // });
-            //   console.log("Events...");
-            //   console.log(r.id);
-            //   console.log(allRules);
 
 
 
@@ -407,4 +412,6 @@ angular.module('myapp')
             angular.element('#builder').queryBuilder('setRules', rulesObj);
         };
 
-    })
+
+
+    });
