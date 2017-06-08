@@ -9,7 +9,6 @@ angular.module('myapp')
             plugins: [
                 'sortable'
             ],
-
             filters: [
                 {
                     id: 'continent',
@@ -31,6 +30,8 @@ angular.module('myapp')
                     //valueSetter : filterContValSetter,
 
                     operators: ['equal', 'not_equal', 'is_null', 'is_not_null', 'between']
+
+
                 },
 
                 //   {
@@ -46,7 +47,8 @@ angular.module('myapp')
                 //       }
                 //     }
                 //   }      
-            ]
+            ],
+
 
         });
 
@@ -90,7 +92,7 @@ angular.module('myapp')
                 filterType = 'string';
             }
             else if (id == 'indication') {
-                filterType = 'string';
+                filterType = 'integer';
 
             }
             else if (id == 'phase') {
@@ -113,10 +115,10 @@ angular.module('myapp')
                 filterInput = 'select';
             }
             else if (id == 'indication') {
-                filterInput = 'select';
+                filterInput = 'number';
             }
             else if (id == 'phase') {
-                filterInput = 'select';
+                filterInput = 'text';
             }
             else if (id == 'ta2') {
                 filterInput = 'select';
@@ -163,6 +165,7 @@ angular.module('myapp')
         }
 
 
+
         $scope.$on('addCriteria', function (event, data) {
             //cretate a filter for add criteria
             var criFilter = {};
@@ -173,6 +176,8 @@ angular.module('myapp')
                 criFilter.type = getCriFilterType(data.filterId);
 
                 criFilter.input = getCriFilterInput(data.filterId);
+
+                //criFilter.flags = getCriFilterFlags(data.filterId);
 
                 //criFilter.Placeholder = getCriFilterPlaceholder(data.filterId);
                 //criFilter.Placeholder = 'Select something';
@@ -199,7 +204,7 @@ angular.module('myapp')
                 //newRule.operator = $builder.queryBuilder("getOperatorByType", "equal");   
 
                 //maintain an array of filters 
-                //qbFilters.push(criFilter);
+                qbFilters.push(criFilter);
             }
 
         }); //of event handler
@@ -215,8 +220,14 @@ angular.module('myapp')
         angular.element('#builder').on('afterAddRule.queryBuilder', function (e, rule) {
 
             //alert("afterAddRule event triggered !");
+            //  rule.flags={
+            //     filter_readonly:true
+            //  };
+            //   var $container = rule.$el.find('.rule-filter-container');
+            //    var $target = $container.find('select');
+            //    $target.addClass('select');
             rule.data = { ruleId: rule.id, grpId: rule.parent.id, reload: true };
-
+            // console.log(rule);
 
             //console.log(JSON.stringify(rule.data));
 
@@ -228,10 +239,6 @@ angular.module('myapp')
 
 
         });
-
-
-
-
 
         function sendRuleValueChangeEvent(qbJsonStr, data) {
             //alert("rule Id =" + data.ruleId );
@@ -249,40 +256,96 @@ angular.module('myapp')
             var results = "";
             $target.on('change', function ($event) {
                 //var index = -1;
-                var allRules = angular.element('#builder').queryBuilder('getRules');
-                var i = 0;
-                var index = -1;
-                groupLinearRules(rule.model.root.rules, r.id, index);
-
+                 //Cascading apply....
+               applycascading(rule);
             });
 
             $target.bind('click', function ($event) {
-                rule.data.reload = false;
-                var ruleElementId = '#' + rule.data.ruleId;
-                var ruleElement = angular.element(document.querySelector(ruleElementId));
-                ruleElement.removeClass('beta');
-                var errorElement = ruleElement.find('.error-container');
-                errorElement.removeClass('alpha');
+                //Only Value Update....
+                //rule.data.reload = false;
+                removeReload(rule);
+                console.log(rule.filter.values);
+                if (rule.data.reload) {
+                    $target.empty();
+                    console.log($target);
+                    var dataSource = {
+                        't4': 'T4',
+                        't5': 'T5',
+                        't6': 'T6',
+                        't7': 'T7',
+                        't8': 'T8',
+                        't9': 'T9'
+                    };
+                    rule.data.reload = false;
+                    $target.css('width', '150px');
+                    angular.forEach(dataSource, function (v, k) {
+                        $target.append('<option value=' + k + '>' + v + '</option>');
+                    });
+                    //rule.filter.values=dataSource;
+                }
 
             });
+            var $targettext = $container.find('input[type=text]');
+            $targettext.bind('click', function ($event) {
+                //Only Value Update....
+                removeReload(rule);
+                rule.data.reload = false;
+
+            });
+            $targettext.bind('keyup', function ($event) {
+                //Cascading apply....
+               applycascading(rule);
+            });
+            var $targetnumeric = $container.find('input[type=number]');
+            $targetnumeric.bind('click', function ($event) {
+                //Only Value Update....
+                removeReload(rule);
+                rule.data.reload = false;
+            });
+
+            $targetnumeric.bind('change keyup keydown', function ($event) {
+                //Cascading apply....
+              applycascading(rule);
+            });
+
         });
+
+        function applycascading(rule) {
+            var allRules = angular.element('#builder').queryBuilder('getRules');
+            var i = 0;
+            var index = -1;
+            groupLinearRules(rule.model.root.rules, rule.id, index);
+        }
+
+
+        function removeReload(rule) {
+
+            var ruleElementId = '#' + rule.data.ruleId;
+            var ruleElement = angular.element(document.querySelector(ruleElementId));
+            ruleElement.removeClass('beta');
+            var errorElement = ruleElement.find('.error-container');
+            errorElement.removeClass('alpha');
+        }
+
+
         function groupLinearRules(array, ruleId, index) {
-            var d=false;
+            var d = false;
             angular.forEach(array, function (v, k) {
                 if (v.id.indexOf('group') > -1) {
                     if (v.rules !== undefined) {
                         index = k;
-                        if(!d){
-                         groupLinearRules(v.rules, ruleId, index);
+                        if (!d) {
+                            groupLinearRules(v.rules, ruleId, index);
                         }
                     }
                 }
                 else {
                     if (v.data !== undefined) {
                         if (v.data.ruleId === ruleId) {
+                            console.log('2121');
                             console.log(v);
                             index = k;
-                            d=true;
+                            d = true;
                         }
                         if (index !== -1 && k > index) {
                             var ruleElementId = '#' + v.data.ruleId;
@@ -293,13 +356,14 @@ angular.module('myapp')
                                 var errorElement = ruleElement.find('.error-container');
                                 errorElement.addClass('alpha');
                                 errorElement.attr('title', 'Reload Once again....');
+
                             }
                         }
                     }
                 }
-             //   console.log("key " + k);
-              //  console.log("index " + index);
-               
+                //   console.log("key " + k);
+                //  console.log("index " + index);
+
             });
 
         }
@@ -309,12 +373,12 @@ angular.module('myapp')
             // alert(rule.id);
             groupLinearRules(rule.model.root.rules, rule.id, index);
         });
-         
-       angular.element("#builder").on('beforeDeleteRule.queryBuilder',function(e,rule){
+
+        angular.element("#builder").on('beforeDeleteRule.queryBuilder', function (e, rule) {
             var index = -1;
             groupLinearRules(rule.model.root.rules, rule.id, index);
-                 
-       });
+
+        });
 
 
 
@@ -346,11 +410,14 @@ angular.module('myapp')
 
 
         angular.element('#builder').on('afterUpdateRuleValue.queryBuilder', function (e, rule) {
+            rule.flags = {
+                filter_readonly: true
+            };
 
-
-
-
-
+            var $container = rule.$el.find('.rule-filter-container');
+            var $target = $container.find('select');
+            $target.addClass('select');
+            //console.log(rule);
 
             //alert("afterUpdateRuleValue event triggered !");
 
@@ -395,23 +462,49 @@ angular.module('myapp')
 
 
         $scope.setRules = function () {
+
             console.log("inside setRules");
-
-            angular.element('#builder').queryBuilder('setFilters', qbFilters);
-
-            /*
+             
+          //  angular.element('#builder').queryBuilder('setFilters', qbFilters);
+          //  console.log(qbFilters);
+          
             var rulesObj = {"condition":"AND","rules":[{"id":"ta","field":"ta","type":"string","input":"select","operator":"equal","value":"t1"},
-                               {"id":"indication","field":"indication","type":"string","input":"select","operator":"equal","value":"ind2"},
-                               {"id":"phase","field":"phase","type":"string","input":"select","operator":"equal","value":"phase3"}],"valid":true};
-            */
-
-            var rulesObj = {
-                "condition": "AND", "rules": [{ "id": "ta2", "field": "ta2", "type": "string", "input": "select", "operator": "equal", "value": "k2" },
-                { "id": "ta2", "field": "ta2", "type": "string", "input": "select", "operator": "not_equal", "value": "1" }], "valid": true
-            }
+                               {"id":"indication","field":"indication","type":"string","input":"number","operator":"equal","value":"222"},
+                               {"id":"phase","field":"phase","type":"string","input":"text","operator":"equal","value":"phase3"}],"valid":true};
+          
+        //  var rulesObj={"condition":"AND","rules":[{"id":"continent","field":"continent","type":"string","input":"select","operator":"equal","value":"eur"}],"valid":true};
+          
+            // var rulesObj = {
+            //     "condition": "AND", "rules": [{ "id": "ta2", "field": "ta2", "type": "string", "input": "select", "operator": "equal", "value": "k2" },
+            //     { "id": "ta2", "field": "ta2", "type": "string", "input": "select", "operator": "not_equal", "value": "1" }], "valid": true
+            // }
             angular.element('#builder').queryBuilder('setRules', rulesObj);
         };
 
+      ///Get the filters
+      $scope.getFilters=function(){
 
+       var queryBuilderElement= angular.element('#builder').queryBuilder();
+       console.log(queryBuilderElement);
+       console.log(queryBuilderElement[0].queryBuilder.filters);
+
+      };
+      //Save the filters
+      $scope.saveTemplate=function(){
+        var queryBuilderElement= angular.element('#builder').queryBuilder();
+        $scope.saveFilter=queryBuilderElement[0].queryBuilder.filters;
+        var q= angular.element('#builder').queryBuilder('getRules');
+        $scope.saveRules=q;
+      };
+     //Populate the filters
+      $scope.populateTemplate=function(){
+          console.log($scope.saveFilter);
+          angular.element('#builder').queryBuilder('setFilters', $scope.saveFilter);
+         angular.element('#builder').queryBuilder('setRules', $scope.saveRules);
+      };
+      //Reset the filters
+     $scope.resetTemplate=function(){
+        angular.element('#builder').queryBuilder('reset');
+     };
 
     });
